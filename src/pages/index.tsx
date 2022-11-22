@@ -4,6 +4,7 @@ import Head from "next/head";
 import Link from "next/link";
 import { useState } from "react";
 import { ItemModal } from "../components/ItemModal";
+import { HiX } from "react-icons/hi";
 
 import { trpc } from "../utils/trpc";
 
@@ -16,6 +17,12 @@ const Home: NextPage = () => {
     undefined,
     { onSuccess: (data) => setItems(data) }
   );
+
+  const { mutate: deleteItem } = trpc.item.deleteItem.useMutation({
+    onSuccess: (shoppingItem) => {
+      setItems((prev) => prev.filter((item) => item.id !== shoppingItem.id));
+    },
+  });
   if (!itemsData || isLoading) return <p>Loading...</p>;
 
   return (
@@ -42,11 +49,18 @@ const Home: NextPage = () => {
           </button>
         </div>
         <ul className="mt-4">
-          {items.map((item) => (
-            <li key={item.id} className="flex items-center justify-between">
-              <span>{item.name}</span>
-            </li>
-          ))}
+          {items.map((item) => {
+            const { id, name } = item;
+            return (
+              <li key={id} className="flex items-center justify-between">
+                <span>{name}</span>
+                <HiX
+                  onClick={() => deleteItem({ id })}
+                  className="cursor-pointer text-lg text-red-500"
+                />
+              </li>
+            );
+          })}
         </ul>
       </main>
     </>

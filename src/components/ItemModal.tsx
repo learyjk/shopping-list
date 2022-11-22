@@ -11,7 +11,7 @@ export const ItemModal: FC<ItemModalProps> = ({ setModalOpen, setItems }) => {
   const [input, setInput] = useState<string>("");
   const { mutate: addItem } = trpc.item.addItem.useMutation({
     onSuccess: (shoppingItem) => {
-      () => setItems((prev) => [...prev, shoppingItem]);
+      setItems((prev) => [...prev, shoppingItem]);
     },
   });
 
