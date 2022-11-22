@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { ItemModal } from "../components/ItemModal";
 import { HiX } from "react-icons/hi";
+import { motion } from "framer-motion";
 
 import { trpc } from "../utils/trpc";
 
@@ -12,10 +13,17 @@ const Home: NextPage = () => {
   // const hello = trpc.example.hello.useQuery({ text: "from tRPC" });
   // console.log(hello);
   const [items, setItems] = useState<ShoppingItem[]>([]);
+  const [checkedItems, setCheckedItems] = useState<ShoppingItem[]>([]);
   const [modalOpen, setModalOpen] = useState<boolean>(false);
   const { data: itemsData, isLoading } = trpc.item.getAllItems.useQuery(
     undefined,
-    { onSuccess: (data) => setItems(data) }
+    {
+      onSuccess: (shoppingItems) => {
+        setItems(shoppingItems);
+        const checked = shoppingItems.filter((item) => item.checked);
+        setCheckedItems(checked);
+      },
+    }
   );
 
   const { mutate: deleteItem } = trpc.item.deleteItem.useMutation({
@@ -23,6 +31,19 @@ const Home: NextPage = () => {
       setItems((prev) => prev.filter((item) => item.id !== shoppingItem.id));
     },
   });
+
+  const { mutate: toggleChecked } = trpc.item.toggleChecked.useMutation({
+    onSuccess: (shoppingItem) => {
+      if (shoppingItem.checked) {
+        setCheckedItems((prev) => [...prev, shoppingItem]);
+      } else {
+        setCheckedItems((prev) =>
+          prev.filter((item) => item.id === shoppingItem.id)
+        );
+      }
+    },
+  });
+
   if (!itemsData || isLoading) return <p>Loading...</p>;
 
   return (
@@ -50,10 +71,25 @@ const Home: NextPage = () => {
         </div>
         <ul className="mt-4">
           {items.map((item) => {
-            const { id, name } = item;
+            const { id, name, checked } = item;
+
             return (
               <li key={id} className="flex items-center justify-between">
-                <span>{name}</span>
+                <div className="relative">
+                  {item.checked && (
+                    <div className="pointer-events-none absolute inset-0 bg-red-500/50 p-2"></div>
+                  )}
+                  <span
+                    onClick={() =>
+                      toggleChecked({
+                        id,
+                        checked: !checked,
+                      })
+                    }
+                  >
+                    {name}
+                  </span>
+                </div>
                 <HiX
                   onClick={() => deleteItem({ id })}
                   className="cursor-pointer text-lg text-red-500"

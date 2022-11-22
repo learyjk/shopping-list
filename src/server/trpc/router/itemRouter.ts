@@ -28,4 +28,17 @@ export const itemRouter = router({
       });
       return item;
     }),
+  toggleChecked: publicProcedure
+    .input(z.object({ id: z.string(), checked: z.boolean() }))
+    .mutation(async ({ ctx, input }) => {
+      const item = await ctx.prisma.shoppingItem.update({
+        where: {
+          id: input.id,
+        },
+        data: {
+          checked: input.checked,
+        },
+      });
+      return item;
+    }),
 });
